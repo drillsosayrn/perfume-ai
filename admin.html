@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Majinor Yönetim</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#0f0f0f;color:#eee;font:15px system-ui,sans-serif}header{padding:22px 30px;border-bottom:1px solid #66552e;display:flex;justify-content:space-between;align-items:center;gap:16px}h1{font:32px Georgia;color:#d8b96b;margin:0}h2{font-size:20px;color:#e9d49f}h3{font-size:16px}a{color:#d8b96b}button,input,textarea,select{font:inherit;border:1px solid #605331;border-radius:10px;padding:11px;background:#202020;color:#eee}button{cursor:pointer}button.primary{background:#d8b96b;color:#111;font-weight:600}button:hover{border-color:#ead395}button:disabled{opacity:.45;cursor:wait}input,textarea{width:100%}textarea{resize:vertical;min-height:150px}label{display:block;margin:14px 0 6px;color:#ccc}main{max-width:1450px;margin:auto;padding:24px}.login{max-width:430px;margin:55px auto;padding:28px;border:1px solid #66552e;border-radius:18px;background:#171717}.muted{font-size:13px;color:#aaa;line-height:1.6}.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:22px}.card{background:#171717;border:1px solid #393327;border-radius:15px;padding:20px}.thread{display:block;width:100%;text-align:left;margin-bottom:8px;overflow-wrap:anywhere}.thread.selected{border-color:#d8b96b;background:#302a1c}.thread small{display:block;margin-top:6px;color:#aaa}.messages{max-height:65vh;overflow:auto}.msg{border:1px solid #36322a;border-radius:12px;padding:14px;margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}.msg.user{border-left:3px solid #d8b96b}.msg.error{border-color:#835044}.msg strong{display:block;font-size:12px;color:#d8b96b;margin-bottom:8px}.note{margin:12px 0;padding:14px;border:1px solid #393327;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}.note strong{display:block;margin-bottom:6px}.state{min-height:24px;color:#d8b96b;margin:12px 0}input[type=checkbox]{width:auto}button.danger{color:#ffb4a3}#notesLayout{display:grid;grid-template-columns:1fr 1fr;gap:22px}[hidden]{display:none!important}@media(max-width:800px){header{padding:18px}.grid,#notesLayout{grid-template-columns:1fr}main{padding:14px}.messages{max-height:55vh}.login{margin:25px auto}}
+</style></head><body>
+<header><div><h1>Majinor</h1><span class="muted">Yönetim · Sohbetler ve onaylı bilgiler</span></div><div class="bar"><a href="/">Mağazaya dön</a><button id="logout" hidden>Çıkış</button></div></header>
+<main><div id="status" class="state" role="status"></div>
+<section id="login" class="login"><h2>Yönetici girişi</h2><p class="muted">Yalnızca yetki verilmiş yönetici hesabı kayıtları görebilir. Supabase panel hesabından ayrı bir uygulama hesabıdır.</p><form id="loginForm"><label for="email">E-posta</label><input id="email" type="email" autocomplete="username" required><label for="password">Şifre</label><input id="password" type="password" autocomplete="current-password" required><button class="primary" style="margin-top:20px;width:100%">Giriş yap</button></form></section>
+<section id="app" hidden><nav class="bar"><button id="chatsTab" class="primary">Sohbetler</button><button id="notesTab">Danışmanlık bilgileri</button></nav>
+<section id="chats"><div class="bar"><select id="filter" aria-label="Sohbet filtresi"><option value="active">Tüm sohbetler</option><option value="keep">Saklanacaklar</option><option value="trash">Çöp kutusu</option></select><button id="reload">Yenile</button></div>
+<div class="grid"><aside class="card"><h2>Sohbet geçmişi</h2><div id="list"></div><button id="more" hidden>Daha fazla yükle</button></aside><section class="card"><h2 id="threadTitle">Bir sohbet seç</h2><div id="actions" class="bar" hidden><button id="keep">Sakla</button><button id="trash" class="danger">Çöp kutusuna taşı</button><button id="correction">Bu sohbet için düzeltme ekle</button><button id="export">JSON indir</button></div><p id="threadMeta" class="muted"></p><div id="messages" class="messages"></div></section></div><p class="muted">Çöp kutusundaki sohbetler geri alınabilir. Bir sohbeti saklamak onu otomatik olarak eğitim bilgisine dönüştürmez.</p></section>
+<section id="notes" hidden><div id="notesLayout"><section class="card"><h2 id="noteHeading">Yeni danışmanlık bilgisi</h2><p class="muted">Ürün kataloğu, mağaza kuralları veya bir yanlışa ilişkin doğru bilgiyi ekle. Yalnızca “Onaylı ve kullanımda” işaretli bilgiler yeni yanıtlara dahil edilir. Müşteri kimlik bilgilerini ekleme.</p><form id="noteForm"><label for="noteTitle">Başlık</label><input id="noteTitle" maxlength="200" required><label for="noteContent">Bilgi / doğru yanıt</label><textarea id="noteContent" maxlength="8000" required></textarea><label><input id="noteActive" type="checkbox"> Onaylı ve kullanımda</label><div class="bar" style="margin-top:20px"><button class="primary">Kaydet</button><button type="button" id="newNote">Yeni not</button></div></form></section><section class="card"><h2>Kayıtlı bilgiler</h2><p class="muted">En yeni 30 aktif bilgi kullanılır. Sohbetler modelin kendisini yeniden eğitmez; onaylı bilgiler her isteğe eklenir.</p><div id="noteList"></div></section></div></section>
+</section></main>
+<script>
+const BASE='https://whsryzggojivkmdemjyh.supabase.co',KEY='sb_publishable_bX-ih2ZA9QJvbuIXkiy9aA_s5G5zBjI';
+let token='',selected=null,rows=[],offset=0,noteId=null,threadMessages=[];
+const $=id=>document.getElementById(id);
+const status=text=>{$('status').textContent=text;};
+function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;}
+async function api(path,options={}){
+ const response=await fetch(BASE+path,{...options,headers:{apikey:KEY,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{}),...(options.headers||{})}});
+ if(response.status===401){token='';$('app').hidden=true;$('login').hidden=false;$('logout').hidden=true;throw new Error('Oturum sona erdi. Tekrar giriş yap.');}
+ if(!response.ok)throw new Error('İşlem tamamlanamadı. Yetkini ve bağlantını kontrol et.');
+ return response.status===204?null:response.json();
+}
+function run(task){return async()=>{try{status('İşlem yapılıyor…');await task();status('');}catch(e){status(e.message);}};}
+$('loginForm').onsubmit=async event=>{
+ event.preventDefault();const button=event.submitter;button.disabled=true;status('Giriş yapılıyor…');
+ try{const data=await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value,password:$('password').value})});token=data.access_token;$('password').value='';const allowed=await api('/rest/v1/rpc/majinor_admin_check',{method:'POST',body:'{}'});if(!allowed){token='';throw new Error('Bu hesabın yönetici yetkisi henüz tanımlanmamış.');}$('login').hidden=true;$('app').hidden=false;$('logout').hidden=false;await loadChats();status('');}catch(e){token='';status(e.message);}finally{button.disabled=false;}
+};
+$('logout').onclick=run(async()=>{try{await api('/auth/v1/logout',{method:'POST'});}finally{token='';rows=[];selected=null;threadMessages=[];$('messages').replaceChildren();$('list').replaceChildren();$('noteList').replaceChildren();$('app').hidden=true;$('login').hidden=false;$('logout').hidden=true;}});
+async function loadChats(append=false){
+ if(!append){offset=0;rows=[];selected=null;$('actions').hidden=true;$('threadTitle').textContent='Bir sohbet seç';$('threadMeta').textContent='';$('messages').replaceChildren();}
+ const filter=$('filter').value;
+ const where=filter==='trash'?'deleted_at=not.is.null':'deleted_at=is.null'+(filter==='keep'?'&keep=eq.true':'');
+ const data=await api('/rest/v1/majinor_conversations?select=*&'+where+'&order=updated_at.desc&limit=100&offset='+offset);
+ rows.push(...data);offset+=data.length;$('more').hidden=data.length<100;renderChats();
+}
+function renderChats(){
+ $('list').replaceChildren();if(!rows.length)$('list').append(el('p','Henüz sohbet yok.','muted'));
+ for(const row of rows){const b=el('button',(row.keep?'★ ':'')+row.title,'thread'+(selected?.id===row.id?' selected':''));b.append(el('small',new Date(row.updated_at).toLocaleString('tr-TR')));b.onclick=run(()=>openChat(row));$('list').append(b);}
+}
+async function openChat(row){
+ selected=row;renderChats();$('threadTitle').textContent=row.title;$('threadMeta').textContent='Başlangıç: '+new Date(row.created_at).toLocaleString('tr-TR');$('actions').hidden=false;$('keep').textContent=row.keep?'Sakla işaretini kaldır':'Sakla';$('trash').textContent=row.deleted_at?'Çöp kutusundan geri al':'Çöp kutusuna taşı';
+ threadMessages=await api('/rest/v1/majinor_messages?select=*&conversation_id=eq.'+row.id+'&order=created_at.asc,id.asc&limit=400');
+ $('messages').replaceChildren();for(const msg of threadMessages){const box=el('div',undefined,'msg '+msg.role);box.append(el('strong',msg.role==='user'?'Müşteri':msg.role==='model'?'Majinor':'Bağlantı hatası'),el('div',msg.content));$('messages').append(box);}
+}
+$('reload').onclick=run(()=>loadChats());$('more').onclick=run(()=>loadChats(true));$('filter').onchange=run(()=>loadChats());
+$('keep').onclick=run(async()=>{if(!selected)return;await api('/rest/v1/majinor_conversations?id=eq.'+selected.id,{method:'PATCH',body:JSON.stringify({keep:!selected.keep})});await loadChats();});
+$('trash').onclick=run(async()=>{if(!selected)return;await api('/rest/v1/majinor_conversations?id=eq.'+selected.id,{method:'PATCH',body:JSON.stringify({deleted_at:selected.deleted_at?null:new Date().toISOString()})});await loadChats();});
+function showTab(name){$('chats').hidden=name!=='chats';$('notes').hidden=name!=='notes';$('chatsTab').className=name==='chats'?'primary':'';$('notesTab').className=name==='notes'?'primary':'';}
+$('chatsTab').onclick=run(async()=>{showTab('chats');await loadChats();});
+$('notesTab').onclick=run(async()=>{showTab('notes');await loadNotes();});
+function resetNote(){noteId=null;$('noteHeading').textContent='Yeni danışmanlık bilgisi';$('noteForm').reset();}
+$('newNote').onclick=resetNote;
+$('correction').onclick=run(async()=>{if(!selected)return;showTab('notes');resetNote();$('noteTitle').value='Düzeltme: '+selected.title.slice(0,180);$('noteContent').value='';await loadNotes();$('noteContent').focus();});
+async function loadNotes(){
+ const data=await api('/rest/v1/majinor_knowledge?select=*&order=created_at.desc&limit=100');
+ $('noteList').replaceChildren();if(!data.length)$('noteList').append(el('p','Henüz bilgi eklenmedi.','muted'));
+ for(const note of data){const box=el('div',undefined,'note');box.append(el('strong',(note.active?'● Kullanımda · ':'○ Taslak · ')+note.title),el('p',note.content),el('small',new Date(note.created_at).toLocaleString('tr-TR')));const button=el('button','Düzenle');button.onclick=()=>{noteId=note.id;$('noteHeading').textContent='Bilgiyi düzenle';$('noteTitle').value=note.title;$('noteContent').value=note.content;$('noteActive').checked=note.active;};box.append(document.createElement('br'),button);$('noteList').append(box);}
+}
+$('noteForm').onsubmit=async event=>{event.preventDefault();event.submitter.disabled=true;try{const body={title:$('noteTitle').value.trim(),content:$('noteContent').value.trim(),active:$('noteActive').checked};if(!body.title||!body.content)throw new Error('Başlık ve bilgi gerekli.');await api('/rest/v1/majinor_knowledge'+(noteId?'?id=eq.'+noteId:''),{method:noteId?'PATCH':'POST',body:JSON.stringify(body)});resetNote();await loadNotes();status('Bilgi kaydedildi.');}catch(e){status(e.message);}finally{event.submitter.disabled=false;}};
+$('export').onclick=()=>{if(!selected)return;const blob=new Blob([JSON.stringify({conversation:selected,messages:threadMessages},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='majinor-'+selected.id+'.json';a.click();URL.revokeObjectURL(url);};
+</script></body></html>
